@@ -1,0 +1,16 @@
+{
+  "name": "trilateration",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-coffeeify": "^0.1.8",
+    "numeric": "^1.2.6"
+  }
+}
