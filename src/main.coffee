@@ -2,21 +2,36 @@
 
 canvas = document.querySelector 'canvas'
 ctx = canvas.getContext '2d'
-freq = [1000]
-FHT_N = 440
+freq = [880]
+FHT_N = 256
 receivers = [
-  new Vector(0, 0, 0),
-  new Vector(-6.5, 0, 0),
-  new Vector(0, -4.3, 0),
-  new Vector(-2, 14, 0)
+  new Vector(-4, -2, 0),
+  new Vector(2, 2, 0),
+  new Vector(-1, -3, 0),
+  new Vector(5, -1, 0)
 ]
-calibration = [
-  [new Vector(10, 0, 0), 10],
-  [new Vector(10, 0, 0), 10],
-  [new Vector(10, 0, 0), 10],
-  [new Vector(10, 0, 0), 10]
-]
-detectionContext = new DetectionContext(receivers, calibration)
+calibrationPoints = [
+  new Vector(5, 0, 0)
+  new Vector(0, 5, 0)
+  new Vector(-5, 0, 0)
+  new Vector(0, -5, 0)
+  new Vector(0, 0, 5)
+];
+pro = 0
+
+calibrationList = []
+
+document.body.addEventListener 'keydown', ->
+  if pro < calibrationPoints.length
+    calibrationList.push {
+      point: calibrationPoints[pro]
+      amplitudes: currentAmplitudes
+    }
+    console.log {
+      point: calibrationPoints[pro]
+      amplitudes: currentAmplitudes
+    }
+    pro += 1
 
 colors = {
   254: 'blue'
@@ -26,24 +41,34 @@ colors = {
 }
 
 currentBuffers = {
-  254: new Uint8Array(130)
-  253: new Uint8Array(130)
-  252: new Uint8Array(130)
-  251: new Uint8Array(130)
+  254: new Float64Array(130)
+  253: new Float64Array(130)
+  252: new Float64Array(130)
+  251: new Float64Array(130)
 }
 
 currentAmplitudes = [0, 0, 0, 0]
 currentPosition = new Vector(0, 0, 0)
+detectionContext = null
 
 window.addEventListener 'message', ((event) ->
-  console.log 255 - event.data[0], event.data[Math.floor(freq[0] * FHT_N / 44100) + 1]
-  currentBuffers[event.data[0]]?.set event.data
-  currentAmplitudes[255 - event.data[0] - 1] = event.data[Math.floor(freq[0] * FHT_N / 44100) + 1]
-  currentPosition = detectionContext.detect(currentAmplitudes)
+  if event.data[0] >= 251
+    #console.log 255 - event.data[0], event.data[Math.floor(freq[0] * FHT_N / 44100) + 1]
+    converted = (2 ** (x / 16) for x in event.data)
+    converted[0] = event.data[0]
+    currentBuffers[event.data[0]]?.set converted
+    currentAmplitudes[255 - event.data[0] - 1] = 2 ** (event.data[Math.floor(freq[0] * FHT_N / 44100) + 1] / 16)
+    #console.log currentAmplitudes
+    if !detectionContext and pro == calibrationPoints.length
+      detectionContext = new DetectionContext(receivers, calibrationList)
+      console.log "fully calibrated"
+    if detectionContext
+      currentPosition = detectionContext.detect(currentAmplitudes)
+      console.log currentPosition
 ), false
 
 render = (buffer) ->
-  ctx.font = "48px serif";
+  ctx.font = "30px serif";
   ctx.fillText(255 - buffer[0] + ": " + buffer[Math.floor(freq[0] * FHT_N / 44100) + 1], 10, 50 * (255 - buffer[0]))
   color = colors[buffer[0]]
 
