@@ -1,3 +1,4 @@
+# 3D VISUALIZATION
 three = require 'three'
 
 SCALE = 20
