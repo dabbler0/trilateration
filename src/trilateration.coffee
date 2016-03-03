@@ -3,6 +3,7 @@ numeric = require 'numeric'
 _fit = (A, b) ->
   left = numeric.dot numeric.transpose(A), A
   right = numeric.dot numeric.transpose(A), b
+  console.log JSON.stringify(left), JSON.stringify(right)
 
   return numeric.solve left, right
 
@@ -66,8 +67,10 @@ exports.DetectionContext = class DetectionContext
 
     b = distances.map (r, i) => r ** 2 - @receivers[i].magnitude() ** 2
     A = @receivers.map (receiver) -> [receiver.x, receiver.y, receiver.z, 1]
+    console.log (JSON.stringify A), distances, b
 
     result = _fit A, b
+    console.log result
 
     # Regressing gives us (x - b), so to get x, we add @base.
     return Vector.fromArray(result.map (x) -> x / (-2)).scaleTo Math.sqrt Math.abs result[3]

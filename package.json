@@ -12,6 +12,7 @@
     "coffee-script": "^1.10.0",
     "gulp": "^3.9.1",
     "gulp-coffeeify": "^0.1.8",
+    "lineareg": "0.0.1",
     "numeric": "^1.2.6",
     "three": "^0.74.0"
   }

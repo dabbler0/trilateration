@@ -4443,23 +4443,38 @@ receivers = [new Vector(-4, -2, 0), new Vector(2, 2, 0), new Vector(-1, -3, 0), 
 
 calibrationPoints = [new Vector(5, 0, 0), new Vector(0, 5, 0), new Vector(-5, 0, 0), new Vector(0, -5, 0), new Vector(0, 0, 5)];
 
-pro = 0;
+pro = 5;
 
-calibrationList = [];
-
-document.body.addEventListener('keydown', function() {
-  if (pro < calibrationPoints.length) {
-    calibrationList.push({
-      point: calibrationPoints[pro],
-      amplitudes: currentAmplitudes
-    });
-    console.log({
-      point: calibrationPoints[pro],
-      amplitudes: currentAmplitudes
-    });
-    return pro += 1;
+calibrationList = [
+  {
+    point: new Vector(5, 0, 0),
+    amplitudes: [490.29287971766973, 724.0773439350247, 133.66704415070896, 158.95779994540595]
+  }, {
+    point: new Vector(0, 5, 0),
+    amplitudes: [245.14643985883487, 145.76494524885652, 86.67235500396113, 256]
+  }, {
+    point: new Vector(-5, 0, 0),
+    amplitudes: [98.70149282610821, 79.47889997270298, 224.80027652778233, 346.6894200158445]
+  }, {
+    point: new Vector(0, -5, 0),
+    amplitudes: [64, 107.63474115247546, 558.3399591246119, 197.40298565221642]
+  }, {
+    point: new Vector(0, 0, 5),
+    amplitudes: [449.60055305556466, 133.66704415070896, 189.03374668025592, 317.9155998908119]
   }
-});
+];
+
+
+/*
+document.body.addEventListener 'keydown', ->
+  if pro < calibrationPoints.length
+    calibrationList.push {
+      point: calibrationPoints[pro]
+      amplitudes: currentAmplitudes
+    }
+    console.log currentAmplitudes
+    pro += 1
+ */
 
 colors = {
   254: 'blue',
@@ -4555,6 +4570,7 @@ _fit = function(A, b) {
   var left, right;
   left = numeric.dot(numeric.transpose(A), A);
   right = numeric.dot(numeric.transpose(A), b);
+  console.log(JSON.stringify(left), JSON.stringify(right));
   return numeric.solve(left, right);
 };
 
@@ -4658,7 +4674,9 @@ exports.DetectionContext = DetectionContext = (function() {
     A = this.receivers.map(function(receiver) {
       return [receiver.x, receiver.y, receiver.z, 1];
     });
+    console.log(JSON.stringify(A), distances, b);
     result = _fit(A, b);
+    console.log(result);
     return Vector.fromArray(result.map(function(x) {
       return x / (-2);
     })).scaleTo(Math.sqrt(Math.abs(result[3])));
