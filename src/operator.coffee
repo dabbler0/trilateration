@@ -1,4 +1,5 @@
 frame = document.querySelector 'iframe'
+###
 
 chrome.serial.getDevices (devices) ->
   chrome.serial.connect devices[0].path, {bitrate: 115200}, ->
@@ -13,3 +14,4 @@ chrome.serial.getDevices (devices) ->
         pack = new Uint8Array(130); pack.set buffer
         frame.contentWindow.postMessage pack, '*'
         j = 0
+###
