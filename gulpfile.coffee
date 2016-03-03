@@ -2,7 +2,7 @@ gulp = require 'gulp'
 coffeeify = require 'gulp-coffeeify'
 
 gulp.task 'browser', ->
-  gulp.src(['src/main.coffee', 'src/operator.coffee'])
+  gulp.src(['src/main.coffee', 'src/operator.coffee', 'src/visualization.coffee'])
       .pipe(coffeeify())
       .pipe(gulp.dest './build/')
       .on('done', ->

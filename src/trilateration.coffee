@@ -13,6 +13,9 @@ exports.Vector = class Vector
 
   minus: (other) -> new Vector @x - other.x, @y - other.y, @z - other.z
   plus: (other) -> new Vector @x + other.x, @y + other.y, @z + other.z
+  times: (other) -> new Vector @x * other, @y * other, @z * other
+
+  scaleTo: (other) -> @times other / @magnitude()
 
   distance: (other) -> @minus(other).magnitude()
 
@@ -37,14 +40,15 @@ exports.DetectionContext = class DetectionContext
         b.push [1 / point.distance(@receivers[i])]
 
       regression = _fit A, b
-      @calibration[i] = 1 / regression[0]
+      @calibration[i] = regression[0]
+      @bias[i] = regression[1]
 
     # Designate the zeroth receiver
     # as the "base" receiver for our later linear regression
     @base = @receivers[0]
 
   detect: (amplitudes) ->
-    distances = amplitudes.map (amplitude, i) => @calibration[i] / amplitude
+    distances = amplitudes.map (amplitude, i) => 1 / (amplitude * @calibration[i] + @bias[i])
     baseDistance = distances[0]
 
     # Our trilateration is based on the following:
@@ -63,5 +67,7 @@ exports.DetectionContext = class DetectionContext
     b = distances.map (r, i) => r ** 2 - @receivers[i].magnitude() ** 2
     A = @receivers.map (receiver) -> [receiver.x, receiver.y, receiver.z, 1]
 
+    result = _fit A, b
+
     # Regressing gives us (x - b), so to get x, we add @base.
-    return Vector.fromArray(_fit(A, b).map (x) -> x/(-2))
+    return Vector.fromArray(result.map (x) -> x / (-2)).scaleTo Math.sqrt Math.abs result[3]

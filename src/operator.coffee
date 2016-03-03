@@ -1,3 +1,10 @@
+# OPERATOR
+#
+# This needs to be separated from the visualization and detection
+# code because of security issues with Chrome extensions. We take
+# samples from serial and send them into an iframe where they can be
+# processed.
+
 frame = document.querySelector 'iframe'
 
 chrome.serial.getDevices (devices) ->

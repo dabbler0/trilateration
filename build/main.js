@@ -4577,6 +4577,14 @@ exports.Vector = Vector = (function() {
     return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
   };
 
+  Vector.prototype.times = function(other) {
+    return new Vector(this.x * other, this.y * other, this.z * other);
+  };
+
+  Vector.prototype.scaleTo = function(other) {
+    return this.times(other / this.magnitude());
+  };
+
   Vector.prototype.distance = function(other) {
     return this.minus(other).magnitude();
   };
@@ -4628,16 +4636,17 @@ exports.DetectionContext = DetectionContext = (function() {
         b.push([1 / point.distance(this.receivers[i])]);
       }
       regression = _fit(A, b);
-      this.calibration[i] = 1 / regression[0];
+      this.calibration[i] = regression[0];
+      this.bias[i] = regression[1];
     }
     this.base = this.receivers[0];
   }
 
   DetectionContext.prototype.detect = function(amplitudes) {
-    var A, b, baseDistance, distances;
+    var A, b, baseDistance, distances, result;
     distances = amplitudes.map((function(_this) {
       return function(amplitude, i) {
-        return _this.calibration[i] / amplitude;
+        return 1 / (amplitude * _this.calibration[i] + _this.bias[i]);
       };
     })(this));
     baseDistance = distances[0];
@@ -4649,10 +4658,10 @@ exports.DetectionContext = DetectionContext = (function() {
     A = this.receivers.map(function(receiver) {
       return [receiver.x, receiver.y, receiver.z, 1];
     });
-    console.log(A, b);
-    return Vector.fromArray(_fit(A, b).map(function(x) {
+    result = _fit(A, b);
+    return Vector.fromArray(result.map(function(x) {
       return x / (-2);
-    }));
+    })).scaleTo(Math.sqrt(Math.abs(result[3])));
   };
 
   return DetectionContext;
