@@ -4570,7 +4570,6 @@ _fit = function(A, b) {
   var left, right;
   left = numeric.dot(numeric.transpose(A), A);
   right = numeric.dot(numeric.transpose(A), b);
-  console.log(JSON.stringify(left), JSON.stringify(right));
   return numeric.solve(left, right);
 };
 
@@ -4674,9 +4673,8 @@ exports.DetectionContext = DetectionContext = (function() {
     A = this.receivers.map(function(receiver) {
       return [receiver.x, receiver.y, receiver.z, 1];
     });
-    console.log(JSON.stringify(A), distances, b);
     result = _fit(A, b);
-    console.log(result);
+    console.log(distances);
     return Vector.fromArray(result.map(function(x) {
       return x / (-2);
     })).scaleTo(Math.sqrt(Math.abs(result[3])));

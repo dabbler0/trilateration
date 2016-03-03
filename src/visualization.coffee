@@ -76,7 +76,6 @@ setScale = (scale) ->
 # CreateDetector returns a function that allows you to set the size of the visualized detector --
 # use this to signify the strength of the signal received there
 createDetector = (x, y, z) ->
-  console.log x, y, z
   boxGeometry = new three.BoxGeometry 0.04 * SCALE, 0.04 * SCALE, 0.04 * SCALE
   material = new three.MeshLambertMaterial color: 0xf0f0f0
   detector = new three.Mesh boxGeometry, material
@@ -108,23 +107,78 @@ do render
 
 # Detector list -- fix
 detectors = [
-  createDetector(0, 6, 0)
-  createDetector(0, -6, 0)
-  createDetector(4, 0, 0)
-  createDetector(-4, 0, 0)
+  createDetector(0, 0, 0)
+  createDetector(5, 0, 1)
+  createDetector(-1, -5, 0)
+  createDetector(3, 2, 0)
+]
+{DetectionContext, Vector} = require './trilateration.coffee'
+
+freq = [880]
+FHT_N = 256
+receivers = [
+  new Vector(0, 0, 0),
+  new Vector(5, 0, 1),
+  new Vector(-1, -5, 0),
+  new Vector(-3, 2, 0)
+]
+calibrationPoints = [
+  new Vector(5, 5, 0)
+  new Vector(5, -5, 0)
+  new Vector(-5, -5, 0)
+  new Vector(-5, 5, 0)
+  new Vector(0, 0, 5)
+];
+pro = 0
+
+
+calibrationList = [
 ]
 
-# Example random visualization. Replace this with real estimation
+document.body.addEventListener 'keydown', ->
+  if pro < calibrationPoints.length
+    o = {
+      point: calibrationPoints[pro]
+      amplitudes: JSON.parse(JSON.stringify(currentAmplitudes))
+    }
+    calibrationList.push o
+    console.log o
+    pro += 1
+
+currentBuffers = {
+  254: new Float64Array(130)
+  253: new Float64Array(130)
+  252: new Float64Array(130)
+  251: new Float64Array(130)
+}
+
+currentAmplitudes = [0, 0, 0, 0]
+currentPosition = new Vector(0, 0, 0)
+detectionContext = null
+
+window.addEventListener 'message', ((event) ->
+  if event.data[0] >= 251
+    converted = (2 ** (x / 16) for x in event.data)
+    converted[0] = event.data[0]
+    currentBuffers[event.data[0]]?.set converted
+    currentAmplitudes[255 - event.data[0] - 1] = 2 ** (event.data[Math.floor(freq[0] * FHT_N / 44100) + 1] / 16)
+    if !detectionContext and pro == calibrationPoints.length
+      detectionContext = new DetectionContext(receivers, calibrationList)
+    if detectionContext
+      currentPosition = detectionContext.detect(currentAmplitudes)
+      console.log currentPosition
+), false
+
 setInterval (->
   setPointLocation(
     {
-      x: point.position.x + (Math.random() / 10 - 1 / 20 ) * SCALE,
-      y: point.position.y + (Math.random() / 10 - 1 / 20 ) * SCALE,
-      z: point.position.z + (Math.random() / 10 - 1 / 20 ) * SCALE
+      x: currentPosition.x,
+      y: currentPosition.y,
+      z: currentPosition.z
     }
   )
 
-  for detector in detectors
-    detector.setScale SCALE / detector.position.distanceTo(point.position)
+  for detector, i in detectors
+    detector.setScale (currentAmplitudes[i] ** (1/3))
 
 ), 10
